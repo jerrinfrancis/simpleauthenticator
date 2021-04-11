@@ -73,6 +73,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 }
 func GenerateOTP(w http.ResponseWriter, r *http.Request) {
+	if os.Getenv("OTP_TEST_MODE") == "X" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	var generateDetails UserDetailsToTriggerOTP
 	err := json.NewDecoder(r.Body).Decode(&generateDetails)
 	if err != nil {
@@ -133,6 +137,14 @@ func GenerateOTP(w http.ResponseWriter, r *http.Request) {
 
 }
 func OTPBasedLogin(w http.ResponseWriter, r *http.Request) {
+	if os.Getenv("OTP_TEST_MODE") == "X" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		token := JWTTokenDetails{AccessToken: "testtoke"}
+		td, _ := json.Marshal(&token)
+		w.Write(td)
+		return
+	}
 	var credentials UserCredentialsForOTPAuth
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
