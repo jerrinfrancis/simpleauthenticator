@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/jerrinfrancis/simpleauthenticator/dishes"
 	"github.com/jerrinfrancis/simpleauthenticator/router"
 	"github.com/jerrinfrancis/simpleauthenticator/user"
 )
@@ -16,6 +17,7 @@ func main() {
 	router.SetHandlerFunc("POST", "/generateOTP", user.GenerateOTP)
 	router.SetHandlerFunc("POST", "/login", user.Login)
 	router.SetHandlerFunc("POST", "/register", user.Register)
+	router.SetHandlerFunc("GET", "/dishes", dishes.GetDishes)
 	PORT := ":" + os.Getenv("LOGINSERVICE_PORT")
 	server := http.Server{
 		Addr:    PORT,
