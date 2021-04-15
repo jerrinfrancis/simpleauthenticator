@@ -3,10 +3,13 @@ package user
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/jerrinfrancis/simpleauthenticator/db"
 	"github.com/jerrinfrancis/simpleauthenticator/db/mongo"
 	authutils "github.com/jerrinfrancis/simpleauthenticator/pkg"
@@ -18,15 +21,46 @@ func RefreshAccessToken(w http.ResponseWriter, r *http.Request) {
 
 	bearerToken := r.Header.Get("Authorization")
 
-	// strArr := strings.Split(bearerToken, " ")
-	// var tokenString string
-	// if len(strArr) == 2 {
-	// 	tokenString = strArr[1]
-	// } else {
+	strArr := strings.Split(bearerToken, " ")
+	var tokenString string
+	if len(strArr) == 2 {
+		tokenString = strArr[1]
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Bearer token absent"))
+		return
+	}
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte("dshaskjdsadsajdkaeoi321321432"), nil
+	})
 
-	// }
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok && !token.Valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	fmt.Println(claims)
+	tokens, err := CreateToken(claims["UserName"].(string))
+	if err != nil {
+		log.Println(err.Error())
+		// If there is an error in creating the JWT return an internal server error
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Authorization", "Bearer "+tokens.AccessToken)
+	w.WriteHeader(http.StatusOK)
+
 	// return ""
-	log.Println(bearerToken)
+	log.Println(tokenString, tokens.AccessToken)
 
 }
 func Register(w http.ResponseWriter, r *http.Request) {

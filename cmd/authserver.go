@@ -17,6 +17,7 @@ func main() {
 	router.SetHandlerFunc("POST", "/generateOTP", user.GenerateOTP)
 	router.SetHandlerFunc("POST", "/login", user.Login)
 	router.SetHandlerFunc("POST", "/register", user.Register)
+	router.SetHandlerFunc("POST", "/refreshAccess", user.RefreshAccessToken)
 	router.SetHandlerFunc("GET", "/dishes", dishes.GetDishes)
 	PORT := ":" + os.Getenv("LOGINSERVICE_PORT")
 	server := http.Server{
